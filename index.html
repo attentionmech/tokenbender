@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>tokenbender</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Fira Code', monospace;
+            background-color: #1e1e1e;
+            color: #ccc;
+        }
+
+        h2 {
+            color: #fff;
+            margin: 1rem;
+        }
+
+        svg {
+            align: center;
+            width: 90%;
+            background-color: #1e1e1e;
+            margin: 10px;
+            border: 2px solid #444;
+        }
+
+
+        .node {
+            stroke: #fff;
+            stroke-width: 1px;
+            cursor: pointer;
+        }
+
+        .node:hover {
+            fill: #4dd0e1;
+        }
+
+        .node-label {
+            fill: #fff;
+            font-size: 15px;
+            text-anchor: top;
+            pointer-events: none;
+        }
+
+        .edge {
+            stroke: #fff;
+            stroke-width: 1px;
+            stroke-opacity: 1;
+            fill: none;
+        }
+
+        .edge-label {
+            font-size: 10px;
+            fill: #ccc;
+            pointer-events: none;
+        }
+
+        #slider {
+            width: 90%;
+            appearance: none;
+            background: linear-gradient(to right, #444 0%, white 50%, #444 100%);
+            border: 1px;
+            border-radius: 10px;
+            outline: none;
+            margin: 1rem;
+        }
+
+        #slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: orange;
+            cursor: pointer;
+            border: 2px solid #fff;
+        }
+
+        #epoch-display {
+            color: #fff;
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>tokenbender</h2>
+    <div id="graph"></div>
+    <div style="margin-top: 20px;">
+        <input type="range" id="slider" min="0" step="1" />
+    </div>
+
+    <script>
+        let structure, epochs;
+        let svg, simulation;
+        let nodeElements, nodeLabels, edgeElements, edgeLabels;
+
+        const width = 800, height = 500;
+
+        async function init() {
+            structure = await (await fetch('/graph_structure')).json();
+            epochs = await (await fetch('/graph_epochs')).json();
+
+            document.getElementById('slider').max = epochs.length - 1;
+            drawStaticGraph(structure);
+            updateVisuals(0);
+        }
+
+        function drawStaticGraph({ nodes, edges }) {
+            svg = d3.select('#graph').append('svg')
+                .attr("preserveAspectRatio", "xMidYMid meet")
+                .attr("viewBox", `0 0 ${width} ${height}`)
+                .classed("svg-content", true); // optional, for CSS hooks
+
+
+            simulation = d3.forceSimulation(nodes)
+                .force("link", d3.forceLink(edges).id(d => d.id).distance(100))
+                .force("charge", d3.forceManyBody().strength(-300))
+                .force("center", d3.forceCenter(width / 2, height / 2));
+
+            edgeElements = svg.append("g")
+                .selectAll("line")
+                .data(edges)
+                .join("line")
+                .attr("class", "edge")
+                .attr("stroke-width", 2);
+
+            edgeLabels = svg.append("g")
+                .selectAll("text")
+                .data(edges)
+                .join("text")
+                .attr("class", "edge-label");
+
+            nodeElements = svg.append("g")
+                .selectAll("circle")
+                .data(nodes)
+                .join("circle")
+                .attr("class", "node")
+                .attr("r", 12)
+                .call(drag(simulation));
+
+            nodeLabels = svg.append("g")
+                .selectAll("text")
+                .data(nodes)
+                .join("text")
+                .attr("class", "node-label")
+                .text(d => d.command)
+                .attr("dx", 0)
+                .attr("dy", 5);
+
+            simulation.on("tick", () => {
+                edgeElements
+                    .attr("x1", d => d.source.x)
+                    .attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x)
+                    .attr("y2", d => d.target.y);
+
+                edgeLabels
+                    .attr("x", d => (d.source.x + d.target.x) / 2)
+                    .attr("y", d => (d.source.y + d.target.y) / 2);
+
+                nodeElements
+                    .attr("cx", d => d.x)
+                    .attr("cy", d => d.y);
+
+                nodeLabels
+                    .attr("x", d => d.x)
+                    .attr("y", d => d.y);
+            });
+        }
+
+        function updateVisuals(epochIndex) {
+            const { node_props, edge_props } = epochs[epochIndex];
+
+            nodeElements.attr("fill", d => node_props[d.id]?.color || "#ccc");
+
+            // Show command on node always (not label from epochs)
+            nodeLabels.text(d => d.command);
+
+            edgeElements.attr("stroke", d => {
+                const key = `${d.source.id}_${d.target.id}`;
+                return edge_props[key]?.color || "#fff";
+            });
+
+            edgeLabels.text(d => {
+                const key = `${d.source.id}_${d.target.id}`;
+                const output = node_props[d.source.id]?.output?.trim() || "";
+                return output;
+            });
+        }
+
+
+        function drag(simulation) {
+            return d3.drag()
+                .on("start", event => {
+                    if (!event.active) simulation.alphaTarget(0.3).restart();
+                    event.subject.fx = event.subject.x;
+                    event.subject.fy = event.subject.y;
+                })
+                .on("drag", event => {
+                    event.subject.fx = event.x;
+                    event.subject.fy = event.y;
+                })
+                .on("end", event => {
+                    if (!event.active) simulation.alphaTarget(0);
+                    event.subject.fx = null;
+                    event.subject.fy = null;
+                });
+        }
+
+        document.getElementById('slider').addEventListener('input', function () {
+            updateVisuals(+this.value);
+        });
+
+        init();
+    </script>
+</body>
+
+</html>
