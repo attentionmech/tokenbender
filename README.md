@@ -2,7 +2,7 @@
 
 <img width="770" alt="Screenshot of tokenbender UI showing a graph" src="https://github.com/user-attachments/assets/c83b8a30-bbc4-4a67-82b1-3fcf1fa0bc6b" />
 
-A visual interface for running commands as a directed acyclic graph (DAG). The output of one command node can be piped as the input to subsequent nodes. Made it to experiment with small model workflows locally while having a visual aspect to it.
+An EXPERIMENTAL(read not finished yet) visual interface for running commands as a directed acyclic graph (DAG). The output of one command node can be piped as the input to subsequent nodes. Made it to experiment with small model workflows locally while having a visual aspect to it.
 
 The state of the graph (including command outputs) is captured after each full execution cycle ("epoch"), allowing you to step back and forth through the history using a slider to observe how data flows and changes.
 
