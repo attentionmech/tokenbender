@@ -3,6 +3,7 @@ import random
 import subprocess
 import threading
 import time
+import argparse
 from collections import defaultdict, deque
 
 from flask import Flask, jsonify, request, send_file
@@ -151,7 +152,12 @@ class CommandGraph:
         return self.epoch_log
 
 
-# Initialize the graph
+# CLI arguments
+parser = argparse.ArgumentParser(description="Run the CommandGraph Flask app.")
+parser.add_argument("--bootstrap", action="store_true", help="Bootstrap the graph on startup")
+args = parser.parse_args()
+
+# Initialize graph
 graph = CommandGraph()
 
 
@@ -170,7 +176,11 @@ def bootstrap_graph():
     graph.add_edge(4, 5)
 
 
-bootstrap_graph()
+if args.bootstrap:
+    print("Bootstrapping graph...")
+    bootstrap_graph()
+else:
+    print("Skipping bootstrap. Run with --bootstrap to initialize the graph.")
 
 
 @app.route("/")
