@@ -95,6 +95,17 @@
         <h2>tokenbender</h2>
         <div id="graph"></div>
         <input type="range" id="slider" min="0" step="1" />
+        <button id="playBtn" style="
+    padding: 0.5rem 1rem;
+    margin: 1rem 0;
+    background-color: #4dd0e1;
+    color: #000;
+    font-weight: bold;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+">▶ Run</button>
+
     </div>
 
     <script>
@@ -112,6 +123,26 @@
             drawStaticGraph(structure);
             updateVisuals(0);
         }
+
+        document.getElementById('playBtn').addEventListener('click', async function () {
+            try {
+                await fetch('/process_epoch', { method: 'POST' });
+        
+                // Re-fetch updated epochs
+                epochs = await (await fetch('/graph_epochs')).json();
+        
+                // Update slider max and visuals
+                const slider = document.getElementById('slider');
+                slider.max = epochs.length - 1;
+                slider.value = epochs.length - 1;
+        
+                updateVisuals(epochs.length - 1);
+            } catch (err) {
+                console.error("Failed to process epoch:", err);
+            }
+        });
+        
+
 
         function drawStaticGraph({ nodes, edges }) {
             svg = d3.select('#graph').append('svg')

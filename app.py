@@ -166,7 +166,7 @@ def bootstrap_graph():
     graph.add_node(2, "ollama run gemma3:1b")
     graph.add_node(3, "ollama run qwen2.5:1.5b")
     graph.add_node(4, "ollama run llama3.2:1b")
-    graph.add_node(5, "ollama run llama3:1b")
+    graph.add_node(5, "ollama run llama3.2:1b")
 
     graph.add_edge(1, 2)
     graph.add_edge(1, 3)
