@@ -12,7 +12,6 @@ The state of the graph (including command outputs) is captured after each full e
 *   **Flask:** (`pip install Flask`)
 *   **(Optional) `uv`:** A fast Python package installer and resolver (for the suggested run command).
 *   **(For Demo)** `ollama`: If you want to run the default demo graph, you need Ollama installed and running with the specified models (`gemma3:1b`, `qwen2.5:1.5b`, `llama3.2:1b`, `llama3:1b`). See [ollama.com](https://ollama.com/).
-*   **(For Demo)** `tcpdump`: The demo uses `tcpdump`. This usually requires **root privileges** (`sudo`).
 
 ## Installation
 
@@ -49,23 +48,8 @@ The state of the graph (including command outputs) is captured after each full e
 2.  **Access the UI:**
     *   Open your web browser and navigate to `http://127.0.0.1:5001`. You should see the initial graph structure.
 
-3.  **Trigger Graph Execution (Epochs):**
-    *   The graph execution doesn't run automatically. You need to trigger each "epoch" (a full run through the topologically sorted nodes) via an API call.
-    *   Open a separate terminal and run the following command to trigger one epoch:
-        ```bash
-        curl -X POST http://127.0.0.1:5001/process_epoch
-        ```
-    *   To automatically trigger epochs repeatedly (e.g., every 5 seconds), you can use `watch`:
-        ```bash
-        watch -n 5 curl -X POST http://127.0.0.1:5001/process_epoch
-        ```
-    *   **Important:** If using the default `tcpdump` command, you might need to run the `python app.py` or `uv run ...` command with `sudo` for `tcpdump` to have the necessary permissions.
-        ```bash
-        sudo python app.py
-        # or potentially: sudo uv run ... app.py
-        ```
 
-4.  **Explore Epochs:**
+3.  **Explore Epochs:**
     *   As epochs are processed, the slider at the bottom of the web UI will update.
     *   Move the slider to view the state of the graph (node outputs displayed on edges, node colors) at different points in the execution history.
 
@@ -93,12 +77,3 @@ def bootstrap_graph():
     graph.add_edge("B", "D")
     graph.add_edge("C", "D")
 ```
-
-## API Endpoints
-
-*   `GET /`: Serves the main HTML page.
-*   `GET /graph_structure`: Returns the static structure of the graph (nodes and edges).
-*   `GET /graph_epochs`: Returns the history of all processed epochs, including node/edge properties and outputs for each epoch.
-*   `POST /process_epoch`: Triggers the execution of the next epoch in the graph.
-*   `POST /add_node`: (API only) Adds a new node. Requires JSON payload: `{"id": "new_node_id", "command": "echo 'new'"}`.
-*   `POST /add_edge`: (API only) Adds a new edge. Requires JSON payload: `{"source": "source_id", "target": "target_id"}`.

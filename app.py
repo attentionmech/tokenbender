@@ -169,7 +169,8 @@ graph = CommandGraph()
 
 
 def bootstrap_graph():
-    graph.add_node(1, "tcpdump -c 1 -nn -i any")
+    # graph.add_node(1, "tcpdump -c 1 -nn -i any")
+    graph.add_node(1,"log stream --timeout 1")
     graph.add_node(2, "ollama run gemma3:1b 'summarise in 3 lines'")
     graph.add_node(3, "cat")
     # graph.add_node(3, "ollama run qwen2.5:1.5b")
