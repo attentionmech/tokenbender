@@ -10,21 +10,29 @@
             font-family: 'Fira Code', monospace;
             background-color: #1e1e1e;
             color: #ccc;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            padding: 1rem;
+            box-sizing: border-box;
         }
 
         h2 {
             color: #fff;
-            margin: 1rem;
+            margin: 1rem 0;
+            text-align: center;
         }
 
         svg {
-            align: center;
-            width: 90%;
+            width: 100%;
             background-color: #1e1e1e;
-            margin: 10px;
             border: 2px solid #444;
         }
-
 
         .node {
             stroke: #fff;
@@ -39,7 +47,7 @@
         .node-label {
             fill: #fff;
             font-size: 15px;
-            text-anchor: top;
+            text-anchor: middle;
             pointer-events: none;
         }
 
@@ -57,13 +65,13 @@
         }
 
         #slider {
-            width: 90%;
+            width: 100%;
             appearance: none;
             background: linear-gradient(to right, #444 0%, white 50%, #444 100%);
-            border: 1px;
+            border: none;
             border-radius: 10px;
             outline: none;
-            margin: 1rem;
+            margin: 1rem 0;
         }
 
         #slider::-webkit-slider-thumb {
@@ -76,17 +84,16 @@
             border: 2px solid #fff;
         }
 
-        #epoch-display {
-            color: #fff;
-            font-size: 1.2rem;
+        #graph {
+            margin-top: 1rem;
         }
     </style>
 </head>
 
 <body>
-    <h2>tokenbender</h2>
-    <div id="graph"></div>
-    <div style="margin-top: 20px;">
+    <div class="container">
+        <h2>tokenbender</h2>
+        <div id="graph"></div>
         <input type="range" id="slider" min="0" step="1" />
     </div>
 
@@ -109,9 +116,7 @@
         function drawStaticGraph({ nodes, edges }) {
             svg = d3.select('#graph').append('svg')
                 .attr("preserveAspectRatio", "xMidYMid meet")
-                .attr("viewBox", `0 0 ${width} ${height}`)
-                .classed("svg-content", true); // optional, for CSS hooks
-
+                .attr("viewBox", `0 0 ${width} ${height}`);
 
             simulation = d3.forceSimulation(nodes)
                 .force("link", d3.forceLink(edges).id(d => d.id).distance(100))
@@ -122,8 +127,7 @@
                 .selectAll("line")
                 .data(edges)
                 .join("line")
-                .attr("class", "edge")
-                .attr("stroke-width", 2);
+                .attr("class", "edge");
 
             edgeLabels = svg.append("g")
                 .selectAll("text")
@@ -174,7 +178,6 @@
 
             nodeElements.attr("fill", d => node_props[d.id]?.color || "#ccc");
 
-            // Show command on node always (not label from epochs)
             nodeLabels.text(d => d.command);
 
             edgeElements.attr("stroke", d => {
@@ -188,7 +191,6 @@
                 return output;
             });
         }
-
 
         function drag(simulation) {
             return d3.drag()
@@ -215,5 +217,4 @@
         init();
     </script>
 </body>
-
 </html>
