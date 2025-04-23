@@ -50,6 +50,8 @@ The state of the graph (including command outputs) is captured after each full e
         ```
     *   This will start the server, typically on `http://127.0.0.1:5001`.
 
+NOTE: if you want to see the simple demo on mac, you can pass a `--bootstrap` flag.
+
 2.  **Access the UI:**
     *   Open your web browser and navigate to `http://127.0.0.1:5001`. You should see the initial graph structure.
 
