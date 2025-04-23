@@ -87,24 +87,72 @@
         #graph {
             margin-top: 1rem;
         }
+
+        #controls {
+            display: flex;
+            align-items: center;
+            margin: 1rem 0;
+            gap: 0.5rem;
+        }
+        
+        #controls button {
+            background-color: #007bff;
+            border: none;
+            color: white;
+            padding: 0.6rem 1.2rem;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+        }
+        
+        #controls button:hover {
+            background-color: #0056b3;
+        }
+        
+        #controls button:active {
+            transform: scale(0.96);
+        }
+        
+        #stopBtn {
+            background-color: #dc3545;
+        }
+        
+        #stopBtn:hover {
+            background-color: #a71d2a;
+        }
+        
+        #loader {
+            font-size: 0.9rem;
+            color: #555;
+            font-style: italic;
+            user-select: none;
+        }
+        #logs {
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 14px;
+            background-color: #f0f0f0;
+            padding: 10px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
     </style>
 </head>
-
 <body>
     <div class="container">
         <h2>tokenbender</h2>
         <div id="graph"></div>
         <input type="range" id="slider" min="0" step="1" />
-        <button id="playBtn" style="
-    padding: 0.5rem 1rem;
-    margin: 1rem 0;
-    background-color: #4dd0e1;
-    color: #000;
-    font-weight: bold;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-">▶ Run</button>
+        <div id="controls">
+            <button id="playBtn">▶ Play</button>
+            <button id="playRepeatBtn">🔁 Play Repeat</button>
+            <button id="stopBtn" style="margin-left: 0.5rem;">■ Stop</button>
+            <span id="loader" style="margin-left: 1rem; display: none;">⏳ Processing...</span>
+        </div>
+        <div id="logs"></div>
 
     </div>
 
@@ -112,6 +160,7 @@
         let structure, epochs;
         let svg, simulation;
         let nodeElements, nodeLabels, edgeElements, edgeLabels;
+        let playRepeatInterval;
 
         const width = 800, height = 500;
 
@@ -125,13 +174,13 @@
         }
 
         document.getElementById('playBtn').addEventListener('click', async function () {
+            const loader = document.getElementById('loader');
+            loader.style.display = 'inline';
             try {
                 await fetch('/process_epoch', { method: 'POST' });
         
-                // Re-fetch updated epochs
                 epochs = await (await fetch('/graph_epochs')).json();
         
-                // Update slider max and visuals
                 const slider = document.getElementById('slider');
                 slider.max = epochs.length - 1;
                 slider.value = epochs.length - 1;
@@ -139,10 +188,54 @@
                 updateVisuals(epochs.length - 1);
             } catch (err) {
                 console.error("Failed to process epoch:", err);
+            } finally {
+                loader.style.display = 'none';
             }
         });
-        
 
+        document.getElementById('playRepeatBtn').addEventListener('click', function () {
+            // If already playing, stop the interval
+            if (playRepeatInterval) {
+                clearInterval(playRepeatInterval);
+                playRepeatInterval = null;
+                document.getElementById('playRepeatBtn').innerText = "🔁 Play Repeat";
+            } else {
+                document.getElementById('playRepeatBtn').innerText = "⏸ Stop Repeat";
+                playRepeatInterval = setInterval(async () => {
+                    const loader = document.getElementById('loader');
+                    loader.style.display = 'inline';
+                    try {
+                        await fetch('/process_epoch', { method: 'POST' });
+
+                        epochs = await (await fetch('/graph_epochs')).json();
+                        const slider = document.getElementById('slider');
+                        slider.max = epochs.length - 1;
+                        slider.value = epochs.length - 1;
+
+                        updateVisuals(epochs.length - 1);
+                    } catch (err) {
+                        console.error("Failed to process epoch:", err);
+                    } finally {
+                        loader.style.display = 'none';
+                    }
+                }, 2000); // Adjust interval as needed (2 seconds for this example)
+            }
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', async function () {
+            try {
+                await fetch('/stop_epoch', { method: 'POST' });
+                console.log("Stop signal sent");
+                // Stop the repeat play if it's active
+                if (playRepeatInterval) {
+                    clearInterval(playRepeatInterval);
+                    playRepeatInterval = null;
+                    document.getElementById('playRepeatBtn').innerText = "🔁 Play Repeat";
+                }
+            } catch (err) {
+                console.error("Failed to stop:", err);
+            }
+        });
 
         function drawStaticGraph({ nodes, edges }) {
             svg = d3.select('#graph').append('svg')
@@ -246,6 +339,23 @@
         });
 
         init();
+
+        const logsDiv = document.getElementById('logs');
+        
+        // Initialize EventSource to receive logs from the server
+        const eventSource = new EventSource('/logs');
+        
+        eventSource.onmessage = function(event) {
+            const logData = event.data; // Get the log data from the event
+            logsDiv.innerHTML += logData + "\n"; // Add the log to the logs div
+            logsDiv.scrollTop = logsDiv.scrollHeight; // Scroll to the bottom to see the latest logs
+        };
+
+        eventSource.onerror = function(event) {
+            console.error('Error receiving log data: ', event);
+            eventSource.close();
+        };
     </script>
 </body>
+
 </html>

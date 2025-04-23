@@ -6,7 +6,7 @@ import time
 import argparse
 from collections import defaultdict, deque
 
-from flask import Flask, jsonify, request, send_file
+from flask import Flask, jsonify, request, send_file, Response
 
 app = Flask(__name__)
 
@@ -17,6 +17,7 @@ class CommandGraph:
         self.edges = []
         self.epoch_log = []
         self.current_epoch = -1
+        self.stop_requested = False  # NEW: Flag to allow stopping
 
     def add_node(self, node_id, command=None):
         if node_id in self.nodes:
@@ -52,7 +53,7 @@ class CommandGraph:
             raise Exception("Cycle detected in graph")
         return sorted_nodes
 
-    def run_node(self, node_id, input_text=None, timeout=10):
+    def run_node(self, node_id, input_text=None, timeout=30):
         print(f"Running Node {node_id}")
         command = self.nodes[node_id]["command"]
         print(f"Command: {command}")
@@ -99,10 +100,16 @@ class CommandGraph:
         print(f"Node {node_id} END")
 
     def process_epoch(self):
+        self.stop_requested = False  # Reset stop flag at start
+
         self.current_epoch += 1
         sorted_nodes = self._topological_sort()
 
         for node_id in sorted_nodes:
+            if self.stop_requested:  # NEW: bail if stop requested
+                print(f"Epoch {self.current_epoch} interrupted before node {node_id}")
+                return
+
             input_text = ""
             for src, tgt in self.edges:
                 if tgt == node_id:
@@ -163,17 +170,19 @@ graph = CommandGraph()
 
 def bootstrap_graph():
     graph.add_node(1, "tcpdump -c 1 -nn -i any")
-    graph.add_node(2, "ollama run gemma3:1b")
-    graph.add_node(3, "ollama run qwen2.5:1.5b")
-    graph.add_node(4, "ollama run llama3.2:1b")
-    graph.add_node(5, "ollama run llama3.2:1b")
+    graph.add_node(2, "ollama run gemma3:1b 'summarise in 3 lines'")
+    graph.add_node(3, "cat")
+    # graph.add_node(3, "ollama run qwen2.5:1.5b")
+    # graph.add_node(4, "ollama run llama3.2:1b")
+    # graph.add_node(5, "ollama run llama3.2:1b")
 
     graph.add_edge(1, 2)
-    graph.add_edge(1, 3)
-    graph.add_edge(1, 4)
-    graph.add_edge(2, 5)
-    graph.add_edge(3, 5)
-    graph.add_edge(4, 5)
+    graph.add_edge(2,3)
+    # graph.add_edge(1, 3)
+    # graph.add_edge(1, 4)
+    # graph.add_edge(2, 5)
+    # graph.add_edge(3, 5)
+    # graph.add_edge(4, 5)
 
 
 if args.bootstrap:
@@ -203,6 +212,32 @@ def process_epoch():
     graph.process_epoch()
     return jsonify({"status": "epoch processed", "epoch": graph.current_epoch}), 200
 
+
+@app.route("/stop_epoch", methods=["POST"])  # NEW: stop endpoint
+def stop_epoch():
+    graph.stop_requested = True
+    return jsonify({"status": "stop requested"}), 200
+
+
+@app.route("/status", methods=["GET"])  # Optional: status for UI feedback
+def status():
+    return jsonify({
+        "current_epoch": graph.current_epoch,
+        "stop_requested": graph.stop_requested,
+    }), 200
+
+
+
+@app.route("/logs")
+def stream_logs():
+    def generate_logs():
+        # Simulate streaming logs (this could be replaced with the actual log-producing method)
+        while not graph.stop_requested:
+            for epoch_data in graph.epoch_log:
+                yield f"data: {epoch_data}\n\n"
+                time.sleep(1)  # Simulate a small delay for new log data
+
+    return Response(generate_logs(), content_type='text/event-stream')
 
 @app.route("/add_node", methods=["POST"])
 def add_node():
