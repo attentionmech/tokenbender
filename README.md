@@ -8,7 +8,7 @@ The state of the graph (including command outputs) is captured after each full e
 
 ## UI
 
-<img width=600 src="https://github.com/user-attachments/assets/bdf75618-578c-44df-8cb5-300313894ca8" />
+<img width=600 src="https://github.com/user-attachments/assets/724589b3-7a41-483e-a6a6-d4c98a4fd680" />
 
 
 ## Prerequisites
