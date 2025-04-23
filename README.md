@@ -1,5 +1,7 @@
 # tokenbender
 
+disclaimer: (unfinished, underconstruction)
+
 idea is to do a visual viewer for local small model workflows. to make it look cool but at the same time keep it useful.
 
 right now you can run it via
