@@ -6,6 +6,11 @@ A visual interface for running commands as a directed acyclic graph (DAG). The o
 
 The state of the graph (including command outputs) is captured after each full execution cycle ("epoch"), allowing you to step back and forth through the history using a slider to observe how data flows and changes.
 
+## UI
+
+<img width=600 src="https://github.com/user-attachments/assets/bdf75618-578c-44df-8cb5-300313894ca8" />
+
+
 ## Prerequisites
 
 *   **Python 3.x**
