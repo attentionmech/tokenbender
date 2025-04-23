@@ -26,10 +26,6 @@ The state of the graph (including command outputs) is captured after each full e
     cd tokenbender
     ```
 2.  **Install dependencies:**
-    *   Using `uv` (recommended):
-        ```bash
-        # Nothing extra to install if using 'uv run' directly
-        ```
     *   Using `pip`:
         ```bash
         pip install Flask
@@ -51,14 +47,6 @@ The state of the graph (including command outputs) is captured after each full e
     *   This will start the server, typically on `http://127.0.0.1:5001`.
 
 NOTE: if you want to see the simple demo on mac, you can pass a `--bootstrap` flag.
-
-2.  **Access the UI:**
-    *   Open your web browser and navigate to `http://127.0.0.1:5001`. You should see the initial graph structure.
-
-
-3.  **Explore Epochs:**
-    *   As epochs are processed, the slider at the bottom of the web UI will update.
-    *   Move the slider to view the state of the graph (node outputs displayed on edges, node colors) at different points in the execution history.
 
 ## Quick usage
 
