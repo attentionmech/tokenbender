@@ -12,3 +12,4 @@ to trigger run of a graph you can do
 
 the demo which is initialised in the bootstrap function uses tcpdump (which needs sudo). you can replace it with any other source of data for your use case.
 
+also this needs ollama right now for the demo. but otherwise just change the steps. Or remove LLMs all together and just use any commands and run the grpah!
