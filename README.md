@@ -6,6 +6,8 @@ An EXPERIMENTAL(read not finished yet) visual interface for running commands as 
 
 The state of the graph (including command outputs) is captured after each full execution cycle ("epoch"), allowing you to step back and forth through the history using a slider to observe how data flows and changes.
 
+Note: for higher performance script instead of ollama, checkout my brutebench repo. it has a high throughput setup with ray serve.
+
 ## UI
 
 <img width=600 src="https://github.com/user-attachments/assets/724589b3-7a41-483e-a6a6-d4c98a4fd680" />
